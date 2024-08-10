@@ -21,26 +21,31 @@ const getRooms = async (req, res) => {
 
 const updateRoomAvailability = async (req, res) => {
   const { roomId } = req.params;
-  const { date, timeSlots } = req.body;
+  const { name, seatCapacity, tags, availability } = req.body;
 
-  const room = await Room.findById(roomId);
+  try {
+    const room = await Room.findById(roomId);
 
-  if (room) {
-    const availabilityIndex = room.availability.findIndex(
-      (a) => a.date.toISOString().split('T')[0] === new Date(date).toISOString().split('T')[0]
-    );
-
-    if (availabilityIndex > -1) {
-      room.availability[availabilityIndex].timeSlots = timeSlots;
-    } else {
-      room.availability.push({ date, timeSlots });
+    if (!room) {
+      return res.status(404).json({ message: 'Room not found' });
     }
+
+    // Update basic room info
+    room.name = name;
+    room.seatCapacity = seatCapacity;
+    room.tags = tags;
+
+    // Update availability
+    room.availability = availability.map(item => ({
+      date: new Date(item.date + 'T00:00:00Z'),
+      timeSlots: item.timeSlots
+    }));
 
     const updatedRoom = await room.save();
     res.json(updatedRoom);
-  } else {
-    res.status(404);
-    throw new Error('Room not found');
+  } catch (error) {
+    console.error('Error updating room:', error);
+    res.status(500).json({ message: 'Error updating room', error: error.message });
   }
 };
 

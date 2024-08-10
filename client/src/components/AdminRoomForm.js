@@ -7,14 +7,23 @@ const AdminRoomForm = ({ room, onSubmit }) => {
   const [tags, setTags] = useState('');
   const [availability, setAvailability] = useState([]);
 
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toISOString().split('T')[0];
+  };
   useEffect(() => {
     if (room) {
       setName(room.name);
       setSeatCapacity(room.seatCapacity);
       setTags(room.tags.join(', '));
-      setAvailability(room.availability || []);
+      setAvailability(room.availability.map(item => ({
+        ...item,
+        date: formatDate(item.date)
+      })) || []);
     }
   }, [room]);
+
+
 
   const handleSubmit = (e) => {
     e.preventDefault();
